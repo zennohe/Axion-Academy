@@ -9,7 +9,7 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebas
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDB3vsCg_Hs-HDRgCjhH3IlSHygaEa0iFA",
+  apiKey: "u r an idiot",
   authDomain: "bust-all-over-my-face.firebaseapp.com",
   projectId: "bust-all-over-my-face",
   storageBucket: "bust-all-over-my-face.appspot.com",
@@ -35,3 +35,4 @@ try {
 console.log("Firebase initialized:", app.name);
 
 export { analytics };
+
