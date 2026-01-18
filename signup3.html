@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Signup - PhysiPack</title>
+  <title>Signup - Axion Academy</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -12,7 +12,8 @@
   class="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-purple-900 to-blue-900 text-white">
 
   <div class="bg-gray-900/70 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-full max-w-md">
-    <h2 class="text-3xl font-bold mb-6 text-center">Sign Up for PhysiPack</h2>
+    <h2 class="text-3xl font-bold mb-6 text-center">Sign Up for Axion Academy</h2>
+
     <form id="signupForm" class="space-y-4">
 
       <!-- Username -->
@@ -24,14 +25,30 @@
         class="w-full p-3 bg-gray-800 rounded-xl border border-gray-700 focus:ring-2 focus:ring-purple-600" />
 
       <!-- Password -->
-      <input id="password" type="password" placeholder="Password" required
-        class="w-full p-3 bg-gray-800 rounded-xl border border-gray-700 focus:ring-2 focus:ring-purple-600" />
+      <div>
+        <input id="password" type="password" placeholder="Password" required
+          class="w-full p-3 bg-gray-800 rounded-xl border border-gray-700 focus:ring-2 focus:ring-purple-600" />
+        <p class="mt-1 text-xs text-gray-400">
+          Password must be at least 6 characters.
+        </p>
+      </div>
 
       <!-- Confirm Password -->
       <input id="confirmPassword" type="password" placeholder="Confirm Password" required
         class="w-full p-3 bg-gray-800 rounded-xl border border-gray-700 focus:ring-2 focus:ring-purple-600" />
 
-      <!-- Grade dropdown (last field) -->
+      <!-- Alert -->
+      <div id="formAlert"
+        class="hidden flex items-start gap-3 p-4 rounded-xl bg-red-900/40 border border-red-500 text-red-300 text-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mt-0.5 text-red-400" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01M5.455 19h13.09c1.31 0 2.14-1.4 1.46-2.53L13.46 4.47c-.65-1.13-2.27-1.13-2.92 0L3.995 16.47C3.315 17.6 4.145 19 5.455 19z" />
+        </svg>
+        <span id="formAlertText"></span>
+      </div>
+
+      <!-- Grade -->
       <select id="grade" required
         class="w-full p-3 bg-gray-800 rounded-xl border border-gray-700 focus:ring-2 focus:ring-purple-600">
         <option value="" disabled selected>Select your grade</option>
@@ -44,11 +61,12 @@
         <option value="12">Grade 12</option>
       </select>
 
-      <!-- Submit button -->
+      <!-- Submit -->
       <button type="submit"
-        class="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 rounded-xl transition duration-200 shadow-md">
+        class="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 rounded-xl transition shadow-md">
         Sign Up
       </button>
+
     </form>
 
     <p class="mt-6 text-center text-gray-400">
@@ -63,9 +81,12 @@
     import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const form = document.getElementById("signupForm");
+    const alertBox = document.getElementById("formAlert");
+    const alertText = document.getElementById("formAlertText");
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+      alertBox.classList.add("hidden");
 
       const username = document.getElementById("username").value.trim();
       const email = document.getElementById("email").value.trim();
@@ -73,17 +94,22 @@
       const password = document.getElementById("password").value;
       const confirmPassword = document.getElementById("confirmPassword").value;
 
+      if (password.length < 6) {
+        alertText.textContent = "Password must be at least 6 characters.";
+        alertBox.classList.remove("hidden");
+        return;
+      }
+
       if (password !== confirmPassword) {
-        alert("Passwords do not match!");
+        alertText.textContent = "Passwords do not match.";
+        alertBox.classList.remove("hidden");
         return;
       }
 
       try {
-        // ✅ Create Firebase Auth user
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // ✅ Create Firestore user doc
         await setDoc(doc(db, "users", user.uid), {
           username,
           email,
@@ -95,11 +121,14 @@
           createdAt: new Date(),
         });
 
-        alert("Signup successful!");
         window.location.href = "login2.html";
       } catch (error) {
-        console.error("Signup error:", error);
-        alert("Error: " + error.message);
+        alertText.textContent = error.message;
+        alertBox.classList.remove("hidden");
       }
     });
   </script>
+
+</body>
+
+</html>

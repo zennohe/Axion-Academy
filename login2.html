@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login - PhysiPack</title>
+  <title>Login - Axion Academy</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
@@ -12,7 +12,7 @@
 <body
   class="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-purple-900 to-blue-900 text-white">
 
-  <!-- ✅ Shared helper script -->
+  <!-- 👁 password toggle helper -->
   <script>
     function togglePassword(id, show) {
       const input = document.getElementById(id);
@@ -20,7 +20,7 @@
     }
   </script>
 
-  <!-- 🔥 Auto-skip script -->
+  <!-- 🔥 Auto-skip if already logged in -->
   <script type="module">
     import { auth, db } from "../js/firebase/firebase-config.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -28,18 +28,13 @@
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        console.log("Already logged in:", user.email);
-
-        // 🗂 check if localStorage already has user
         const stored = localStorage.getItem("user");
         if (!stored) {
           const userDocRef = doc(db, "users", user.uid);
           const userDoc = await getDoc(userDocRef);
 
           if (userDoc.exists()) {
-            const userData = userDoc.data();
-            localStorage.setItem("user", JSON.stringify(userData));
-            console.log("Auto-skip saved:", userData);
+            localStorage.setItem("user", JSON.stringify(userDoc.data()));
           } else {
             localStorage.setItem("user", JSON.stringify({
               uid: user.uid,
@@ -54,15 +49,18 @@
   </script>
 
   <div class="bg-gray-900/70 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-full max-w-md">
-    <h2 class="text-3xl font-bold mb-6 text-center">Login to PhysiPack</h2>
-    <form id="loginForm" class="space-y-4">
-      <input type="email" id="email" placeholder="Email" name="email"
-        class="w-full p-3 bg-gray-800 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
-        required />
+    <h2 class="text-3xl font-bold mb-6 text-center">Login to Axion Academy</h2>
 
+    <form id="loginForm" class="space-y-4">
+
+      <!-- Email -->
+      <input type="email" id="email" placeholder="Email"
+        class="w-full p-3 bg-gray-800 rounded-xl border border-gray-700 focus:ring-2 focus:ring-purple-600" required />
+
+      <!-- Password -->
       <div class="relative">
-        <input id="password" type="password" placeholder="Password" name="password"
-          class="w-full p-3 pr-10 bg-gray-800 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
+        <input id="password" type="password" placeholder="Password"
+          class="w-full p-3 pr-10 bg-gray-800 rounded-xl border border-gray-700 focus:ring-2 focus:ring-purple-600"
           required />
         <button type="button" onmousedown="togglePassword('password', true)"
           onmouseup="togglePassword('password', false)" onmouseleave="togglePassword('password', false)"
@@ -71,10 +69,23 @@
         </button>
       </div>
 
+      <!-- Alert -->
+      <div id="loginAlert"
+        class="hidden flex items-start gap-3 p-4 rounded-xl bg-red-900/40 border border-red-500 text-red-300 text-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mt-0.5 text-red-400" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01M5.455 19h13.09c1.31 0 2.14-1.4 1.46-2.53L13.46 4.47c-.65-1.13-2.27-1.13-2.92 0L3.995 16.47C3.315 17.6 4.145 19 5.455 19z" />
+        </svg>
+        <span id="loginAlertText"></span>
+      </div>
+
+      <!-- Submit -->
       <button id="login-btn"
-        class="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 rounded-xl transition duration-200 shadow-md">
+        class="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 rounded-xl transition shadow-md">
         Login
       </button>
+
     </form>
 
     <p class="mt-6 text-center text-gray-400">
@@ -85,17 +96,26 @@
 
   <!-- Login logic -->
   <script type="module">
-    import { auth, db } from "../js/firebase/firebase-config.js"
+    import { auth, db } from "../js/firebase/firebase-config.js";
     import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const loginBtn = document.querySelector("#login-btn");
+    const loginBtn = document.getElementById("login-btn");
+    const alertBox = document.getElementById("loginAlert");
+    const alertText = document.getElementById("loginAlertText");
 
     loginBtn.addEventListener("click", async (e) => {
       e.preventDefault();
+      alertBox.classList.add("hidden");
 
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
+
+      if (!email || !password) {
+        alertText.textContent = "Please enter both email and password.";
+        alertBox.classList.remove("hidden");
+        return;
+      }
 
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -105,9 +125,7 @@
         const userDoc = await getDoc(userDocRef);
 
         if (userDoc.exists()) {
-          const userData = userDoc.data();
-          localStorage.setItem("user", JSON.stringify(userData));
-          console.log("Saved to localStorage:", userData);
+          localStorage.setItem("user", JSON.stringify(userDoc.data()));
         } else {
           localStorage.setItem("user", JSON.stringify({
             uid: user.uid,
@@ -115,12 +133,11 @@
           }));
         }
 
-        alert("Login successful!");
         window.location.href = "../index.html";
 
       } catch (err) {
-        console.error("Login error:", err);
-        alert(err.message);
+        alertText.textContent = err.message;
+        alertBox.classList.remove("hidden");
       }
     });
 
